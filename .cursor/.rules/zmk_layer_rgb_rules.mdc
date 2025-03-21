@@ -1,95 +1,124 @@
 ---
 description: Standards for layer-specific RGB indicators in ZMK
 globs: 
-alwaysApply: false
+  - "config/*.keymap"
 ---
-# ZMK Layer RGB Indicator Standards
+# ZMK Layer RGB Standards
 
 <rule>
-name: zmk_layer_rgb_indicators
-description: Ensures consistent implementation of layer-specific RGB indicators in ZMK firmware
+name: zmk_layer_rgb_configuration
+description: Standards for configuring layer-specific RGB indicators in keymap files, with special protection for the magic layer
 
 filters:
   - type: file_extension
     pattern: "\\.keymap$"
   - type: content
-    pattern: "(?s).*layer.*rgb.*"
+    pattern: "(?s).*(rgb.*layer|behavior-rgb-underglow|magic).*"
 
 actions:
   - type: suggest
     message: |
-      When implementing layer-specific RGB indicators:
+      When configuring layer-specific RGB indicators:
 
-      1. Color Definitions:
+      1. Layer Protection:
          ```c
-         // Define colors at the top of the file
-         #define INDICATOR_COLOR 0x800080  // Purple
-         #define LED_OFF 0x000000         // Black
-         ```
-
-      2. Layer-Specific Behaviors:
-         ```c
-         // One behavior per layer with unique LED indices
-         layer0_rgb: layer0_rgb {
-             compatible = "zmk,behavior-rgb-underglow";
-             #binding-cells = <2>;
-             led-index = <index>;  // Unique per layer
-             default-color = <INDICATOR_COLOR>;
-             off-color = <LED_OFF>;
+         // NEVER modify the magic layer configuration
+         // The magic layer (typically layer 2) contains critical keyboard functions
+         // Changes to this layer could lock you out of important features
+         
+         // Example of protected magic layer definition
+         magic_layer {  // DO NOT MODIFY
+             bindings = <existing_bindings>;  // Keep original bindings
+             // Keep original RGB settings if any
          };
          ```
 
-      3. Layer Implementation:
+      2. Layer Constants:
          ```c
-         default_layer {
-             bindings = <
-                 // Place indicator at specific position
-                 &layer0_rgb 0 0
-             >;
+         // Define layer numbers at the top
+         #define DEFAULT 0
+         #define LOWER   1
+         // Magic layer is typically 2 - DO NOT MODIFY
+         ```
+
+      3. Layer-Specific RGB Behaviors:
+         ```c
+         / {
+             behaviors {
+                 // Safe to modify DEFAULT layer indicator
+                 rgb_layer_default: rgb_layer_default {
+                     compatible = "zmk,behavior-rgb-underglow";
+                     #binding-cells = <2>;
+                     led-index = <17>;  // R2C6 - Layer 0 indicator
+                     default-color = <INDICATOR_COLOR>;
+                     off-color = <LED_OFF>;
+                 };
+                 
+                 // Safe to modify LOWER layer indicator
+                 rgb_layer_lower: rgb_layer_lower {
+                     compatible = "zmk,behavior-rgb-underglow";
+                     #binding-cells = <2>;
+                     led-index = <16>;  // R2C5 - Layer 1 indicator
+                     default-color = <INDICATOR_COLOR>;
+                     off-color = <LED_OFF>;
+                 };
+
+                 // DO NOT create or modify magic layer RGB behaviors
+                 // unless explicitly directed by firmware documentation
+             };
          };
          ```
 
       4. Best Practices:
-         - Use consistent LED positions relative to layer
-         - Document LED indices in comments
-         - Use clear color definitions
-         - Maintain visual consistency across layers
+         - NEVER modify the magic layer configuration
+         - Use consistent LED positions for safe layer indicators
+         - Document physical positions in comments
+         - Use descriptive behavior names
+         - Keep layer numbers and RGB behaviors aligned
+         - Avoid duplicate LED indices across behaviors
+
+      5. Magic Layer Safety:
+         - Don't change magic layer bindings
+         - Don't modify magic layer RGB indicators
+         - Keep original magic layer timeout settings
+         - Document any existing magic layer configurations
+         - Consult firmware documentation before any magic layer changes
 
 examples:
   - input: |
-      // Bad - Inconsistent positioning
-      default_layer {
-          &rgb_ind 0 0 at R1C1
-      };
-      lower_layer {
-          &rgb_ind 0 0 at R3C4  // Different position
+      // DANGEROUS - Modifying magic layer
+      magic_layer {
+          bindings = <
+              &rgb_magic 0 0
+          >;
       };
       
-      // Good - Consistent relative positioning
+      // SAFE - Working with other layers
       default_layer {
-          &layer0_rgb 0 0 at R2C6  // Consistent position
+          bindings = <
+              &rgb_layer_default 0 0
+          >;
       };
-      lower_layer {
-          &layer1_rgb 0 0 at R2C5  // One position left
-      };
-    output: "Maintain consistent relative LED positions for better UX"
+    output: "Do not modify magic layer configuration"
 
 metadata:
-  priority: medium
+  priority: critical
   version: 1.0
   related_rules:
-    - zmk_rgb_configuration
-    - zmk_layer_standards
-  responsibility: "Layer-specific RGB indicator implementation"
+    - zmk_led_strip_configuration
+    - zmk_rgb_rules
+  responsibility: "Layer-specific RGB configuration with magic layer protection"
   standard_patterns:
-    layer_rgb_behavior:
-      compatible: "zmk,behavior-rgb-underglow"
-      cells: 2
-      properties:
-        - led-index
-        - default-color
-        - off-color
-    positioning:
-      pattern: "Consistent relative positions between layers"
-      example: "R2C6 → R2C5 → R2C4"
+    layer_constants:
+      format: "#define LAYER_NAME N"
+      protected: ["MAGIC 2"]
+    behavior_naming:
+      format: "rgb_layer_${name}"
+      protected: ["magic", "magic_layer"]
+    led_documentation:
+      format: "// RxCy - Layer N indicator"
+    magic_layer_protection:
+      bindings: "preserve_original"
+      rgb_settings: "preserve_original"
+      timeout: "preserve_original"
 </rule> 

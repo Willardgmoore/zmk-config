@@ -1,8 +1,7 @@
 ---
 description: Standards for ZMK RGB LED configuration
 globs: 
-  - "config/*.keymap"
-  - "config/*.conf"
+alwaysApply: false
 ---
 # ZMK RGB Configuration Standards
 
@@ -102,4 +101,93 @@ metadata:
       optional:
         - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE
         - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB
+</rule>
+
+---
+description: Standards for RGB LED behavior configuration in ZMK
+globs: 
+  - "config/*.keymap"
+---
+# ZMK RGB Behavior Standards
+
+<rule>
+name: zmk_rgb_behavior_configuration
+description: Standards for configuring RGB LED behaviors in keymap files
+
+filters:
+  - type: file_extension
+    pattern: "\\.keymap$"
+  - type: content
+    pattern: "(?s).*(rgb_ug|behavior-rgb-underglow).*"
+
+actions:
+  - type: suggest
+    message: |
+      When defining RGB behaviors in ZMK keymap files:
+
+      1. Color Definitions:
+         ```c
+         // Place at the top of the keymap file
+         #define RGB_COLOR_RED    0xFF0000
+         #define RGB_COLOR_GREEN  0x00FF00
+         #define RGB_COLOR_BLUE   0x0000FF
+         #define RGB_COLOR_OFF    0x000000
+         ```
+
+      2. RGB Behavior Structure:
+         ```c
+         / {
+             behaviors {
+                 rgb_indicator: rgb_indicator {
+                     compatible = "zmk,behavior-rgb-underglow";
+                     #binding-cells = <2>;
+                     led-index = <N>;  // Document the physical position
+                     default-color = <RGB_COLOR>;
+                     off-color = <RGB_COLOR_OFF>;
+                 };
+             };
+         };
+         ```
+
+      3. Best Practices:
+         - Use descriptive names for behaviors
+         - Document LED indices with physical positions
+         - Use consistent color definitions
+         - Keep all RGB behaviors in the behaviors section
+         - Don't mix hardware config with behaviors
+
+examples:
+  - input: |
+      // BAD - Undocumented indices and magic numbers
+      rgb_key: rgb_key {
+          led-index = <5>;
+          default-color = <0x123456>;
+      };
+      
+      // GOOD - Documented and structured
+      #define MINT_COLOR 0x00FF9F
+      
+      rgb_layer_indicator: rgb_layer_indicator {
+          compatible = "zmk,behavior-rgb-underglow";
+          led-index = <17>;  // R2C6 - Layer 0 indicator
+          default-color = <MINT_COLOR>;
+          off-color = <RGB_COLOR_OFF>;
+      };
+    output: "Use documented LED indices and defined color constants"
+
+metadata:
+  priority: high
+  version: 1.0
+  related_rules:
+    - zmk_led_strip_configuration
+    - zmk_layer_rgb_rules
+  responsibility: "RGB behavior configuration"
+  standard_patterns:
+    color_definitions:
+      prefix: "RGB_COLOR_"
+      format: "0xRRGGBB"
+    behavior_definition:
+      compatible: "zmk,behavior-rgb-underglow"
+      cells: "#binding-cells = <2>"
+      index: "led-index = <N>  // Position comment"
 </rule> 

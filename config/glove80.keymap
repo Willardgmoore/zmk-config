@@ -23,26 +23,6 @@
 #define LED_OFF 0x000000
 
 / {
-    chosen {
-        zmk,underglow = &led_strip;
-    };
-
-    // RGB LED Configuration
-    led_strip: ws2812@0 {
-        compatible = "worldsemi,ws2812-spi";
-        label = "WS2812";
-
-        /* SPI */
-        reg = <0>;
-        spi-max-frequency = <4000000>;
-
-        /* WS2812 */
-        chain-length = <76>; /* number of LEDs */
-        color-mapping = <LED_COLOR_ID_GREEN LED_COLOR_ID_RED LED_COLOR_ID_BLUE>;
-        spi-one-frame = <0x70>;
-        spi-zero-frame = <0x40>;
-    };
-
     behaviors {
         // For the "layer" key, it'd nice to be able to use it as either a shift or a toggle.
         // Configure it as a tap dance, so the first tap (or hold) is a &mo and the second tap is a &to

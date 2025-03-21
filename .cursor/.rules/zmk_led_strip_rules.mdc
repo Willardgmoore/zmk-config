@@ -1,0 +1,131 @@
+---
+description: Standards for LED strip configuration in ZMK to prevent naming conflicts
+globs: 
+  - "config/*.keymap"
+  - "config/boards/arm/**/*.dtsi"
+---
+# ZMK LED Strip Configuration Standards
+
+<rule>
+name: zmk_led_strip_configuration
+description: Ensures proper separation of LED strip hardware configuration and RGB behavior definitions to prevent conflicts
+
+filters:
+  - type: file_extension
+    pattern: "\\.keymap$|\\.dtsi$"
+  - type: content
+    pattern: "(?s).*(led_strip|ws2812|rgb|spi).*"
+
+actions:
+  - type: suggest
+    message: |
+      When configuring LED strips and RGB behaviors in ZMK:
+
+      1. Hardware Configuration Location:
+         ```c
+         // Place in board's .dtsi file ONLY
+         &spi0 {
+             compatible = "nordic,nrf-spim";
+             status = "okay";
+             // Specify mosi-pin, sck-pin based on board
+             led_strip: ws2812@0 {
+                 compatible = "worldsemi,ws2812-spi";
+                 // Hardware-specific settings
+             };
+         };
+
+         // Required chosen node in .dtsi
+         / {
+             chosen {
+                 zmk,underglow = &led_strip;
+             };
+         };
+         ```
+
+      2. Keymap RGB Behaviors:
+         ```c
+         // Place in keymap file ONLY
+         / {
+             behaviors {
+                 rgb_key: rgb_key {
+                     compatible = "zmk,behavior-rgb-underglow";
+                     led-index = <index>;
+                     // Behavior-specific settings
+                 };
+             };
+         };
+         ```
+
+      3. Common Conflicts to Avoid:
+         - Don't define LED strip hardware in keymap files
+         - Don't duplicate `chosen` nodes
+         - Keep hardware configuration in board files
+         - Keep behavior definitions in keymap files
+         - Never define SPI configuration in keymap files
+         - Ensure SPI node has proper compatible and status settings
+
+      4. Required Structure:
+         - Hardware config → board's .dtsi
+         - RGB behaviors → keymap file
+         - Color definitions → keymap file
+         - Layer bindings → keymap file
+         - SPI configuration → board's .dtsi only
+
+      5. SPI Configuration Requirements:
+         - Use `nordic,nrf-spim` for Nordic chips
+         - Set explicit status as "okay"
+         - Configure correct pins for your board
+         - Place all SPI settings in .dtsi file
+         - Avoid duplicate SPI configurations
+
+examples:
+  - input: |
+      // BAD - SPI configuration in keymap
+      / {
+          &spi0 {
+              status = "okay";
+              led_strip: ws2812@0 {
+                  compatible = "worldsemi,ws2812-spi";
+              };
+          };
+      };
+      
+      // GOOD - Complete configuration in .dtsi
+      &spi0 {
+          compatible = "nordic,nrf-spim";
+          status = "okay";
+          
+          led_strip: ws2812@0 {
+              compatible = "worldsemi,ws2812-spi";
+              chain-length = <76>;
+          };
+      };
+      
+      / {
+          chosen {
+              zmk,underglow = &led_strip;
+          };
+      };
+    output: "Keep all hardware configuration in .dtsi files"
+
+metadata:
+  priority: high
+  version: 1.0
+  related_rules:
+    - zmk_rgb_configuration
+    - zmk_keymap_standards
+  responsibility: "LED strip configuration separation"
+  standard_patterns:
+    hardware_config:
+      location: "board/*.dtsi"
+      node: "led_strip: ws2812@0"
+      parent: "&spi0"
+    spi_config:
+      compatible: "nordic,nrf-spim"
+      status: "okay"
+      required_settings: ["mosi-pin", "sck-pin"]
+    behavior_config:
+      location: "*.keymap"
+      node: "behaviors"
+      compatible: "zmk,behavior-rgb-underglow"
+</rule> 
