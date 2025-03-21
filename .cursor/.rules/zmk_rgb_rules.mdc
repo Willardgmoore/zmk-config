@@ -1,9 +1,9 @@
 ---
-description: Standards for ZMK RGB LED configuration
+description: Standards for ZMK RGB LED configuration for Glove80
 globs: 
 alwaysApply: false
 ---
-# ZMK RGB Configuration Standards
+# ZMK RGB Configuration Standards for Glove80
 
 <rule>
 name: zmk_rgb_configuration
@@ -18,26 +18,20 @@ filters:
 actions:
   - type: suggest
     message: |
-      When configuring RGB LEDs in ZMK:
+      When configuring RGB LEDs in ZMK for Glove80:
 
       1. Required Header Files:
          ```c
          #include <dt-bindings/zmk/rgb.h>
-         #include <dt-bindings/led/led.h>
          ```
 
-      2. LED Strip Configuration:
+      2. RGB Status Macro (Optional):
          ```c
-         chosen {
-             zmk,underglow = &led_strip;
-         };
-
-         led_strip: ws2812@0 {
-             compatible = "worldsemi,ws2812-spi";
-             chain-length = <76>;  // Glove80 specific
-             color-mapping = <LED_COLOR_ID_GREEN 
-                            LED_COLOR_ID_RED 
-                            LED_COLOR_ID_BLUE>;
+         rgb_ug_status_macro: rgb_ug_status_macro {
+             label = "RGB_UG_STATUS";
+             compatible = "zmk,behavior-macro";
+             #binding-cells = <0>;
+             bindings = <&rgb_ug RGB_STATUS>;
          }
          ```
 
@@ -45,62 +39,58 @@ actions:
          ```conf
          CONFIG_ZMK_RGB_UNDERGLOW=y
          CONFIG_WS2812_STRIP=y
-         CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE=y
-         CONFIG_ZMK_IDLE_TIMEOUT=<timeout_ms>
          ```
 
-      4. RGB Behavior Definition:
-         ```c
-         rgb_key: rgb_key {
-             compatible = "zmk,behavior-rgb-underglow";
-             #binding-cells = <2>;
-             led-index = <index>;
-             default-color = <color_hex>;
-             off-color = <0x000000>;
-         }
-         ```
+      4. RGB Controls:
+         Use direct &rgb_ug commands instead of custom behaviors:
+         - &rgb_ug RGB_TOG (Toggle)
+         - &rgb_ug RGB_HUI/RGB_HUD (Hue increase/decrease)
+         - &rgb_ug RGB_SAI/RGB_SAD (Saturation increase/decrease)
+         - &rgb_ug RGB_BRI/RGB_BRD (Brightness increase/decrease)
+         - &rgb_ug RGB_SPI/RGB_SPD (Speed increase/decrease)
+         - &rgb_ug RGB_EFF (Effect)
 
-      5. Common Pitfalls:
-         - Always specify chain-length for your specific keyboard
-         - Use correct color-mapping order
-         - Set appropriate idle timeout values
-         - Define colors in proper hex format
+      5. Best Practices:
+         - Place RGB controls in a dedicated layer (e.g., magic layer)
+         - Use RGB_STATUS for layer indication
+         - Avoid custom RGB behaviors
+         - Keep RGB controls grouped together for better organization
 
 examples:
   - input: |
-      // Bad - Incorrect color mapping
-      color-mapping = <LED_COLOR_ID_RED 
-                      LED_COLOR_ID_GREEN 
-                      LED_COLOR_ID_BLUE>;
+      // Bad - Custom RGB behavior
+      rgb_layer: rgb_layer {
+          compatible = "zmk,behavior-rgb-underglow";
+          #binding-cells = <2>;
+          led-index = <0>;
+      };
       
-      // Good - Correct for WS2812
-      color-mapping = <LED_COLOR_ID_GREEN 
-                      LED_COLOR_ID_RED 
-                      LED_COLOR_ID_BLUE>;
-    output: "WS2812 LEDs expect GRB color mapping"
+      // Good - Direct RGB commands
+      &rgb_ug RGB_TOG
+      &rgb_ug RGB_EFF
+    output: "Use built-in RGB underglow commands instead of custom behaviors"
 
 metadata:
   priority: high
   version: 1.0
   related_rules:
     - zmk_keymap_standards
-    - zmk_behavior_standards
-  responsibility: "RGB LED configuration in ZMK"
+  responsibility: "RGB LED configuration in Glove80 ZMK"
   standard_patterns:
-    rgb_behavior:
-      compatible: "zmk,behavior-rgb-underglow"
-      cells: 2
-      properties:
-        - led-index
-        - default-color
-        - off-color
-    conf_settings:
-      required:
-        - CONFIG_ZMK_RGB_UNDERGLOW
-        - CONFIG_WS2812_STRIP
-      optional:
-        - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE
-        - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB
+    rgb_commands:
+      format: "&rgb_ug <COMMAND>"
+      commands:
+        - RGB_TOG
+        - RGB_HUI
+        - RGB_HUD
+        - RGB_SAI
+        - RGB_SAD
+        - RGB_BRI
+        - RGB_BRD
+        - RGB_SPI
+        - RGB_SPD
+        - RGB_EFF
+        - RGB_STATUS
 </rule>
 
 ---
