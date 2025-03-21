@@ -1,0 +1,99 @@
+---
+description: Standards for ZMK behavior bindings and property validation
+globs: 
+alwaysApply: false
+---
+# ZMK Behavior Bindings Standards
+
+<rule>
+name: zmk_behavior_bindings_validation
+description: Ensures proper validation of ZMK behavior properties and bindings
+
+filters:
+  - type: file_extension
+    pattern: "\\.keymap$|\\.dtsi$|\\.yaml$"
+  - type: content
+    pattern: "(?s).*(behavior|compatible|properties|bindings).*"
+
+actions:
+  - type: suggest
+    message: |
+      When working with ZMK behavior bindings:
+
+      1. Behavior Property Validation:
+         ```yaml
+         # Required in behavior binding YAML
+         properties:
+           compatible:
+             const: "zmk,behavior-rgb-underglow"
+           index:  # Use 'index' instead of 'led-index'
+             type: "int"
+             description: "LED index to control"
+           default-color:
+             type: "int"
+             description: "Default color in RGB format"
+         ```
+
+      2. Proper Behavior Definition:
+         ```c
+         // In keymap file
+         behaviors {
+             rgb_indicator: rgb_indicator {
+                 compatible = "zmk,behavior-rgb-underglow";
+                 #binding-cells = <2>;
+                 index = <N>;  // Use 'index' instead of 'led-index'
+                 default-color = <RGB_COLOR>;
+             };
+         };
+         ```
+
+      3. Version Compatibility:
+         - Check ZMK version compatibility
+         - Verify behavior property names in current ZMK version
+         - Use proper property names for your ZMK version
+         - Test bindings before deployment
+
+      4. Common Issues to Check:
+         - Property names must match binding definitions
+         - All required properties must be declared
+         - Property types must match binding specs
+         - Bindings must be compatible with ZMK version
+
+      5. Binding File Requirements:
+         - Must be in proper YAML format
+         - Must declare all valid properties
+         - Must specify correct compatible string
+         - Must include property descriptions
+         - Must validate property types
+
+examples:
+  - input: |
+      // BAD - Using undeclared property
+      rgb_key: rgb_key {
+          compatible = "zmk,behavior-rgb-underglow";
+          led-index = <5>;  // Incorrect property name
+      };
+      
+      // GOOD - Using declared property
+      rgb_key: rgb_key {
+          compatible = "zmk,behavior-rgb-underglow";
+          index = <5>;      // Correct property name
+      };
+    output: "Use correct property names as defined in behavior bindings"
+
+metadata:
+  priority: critical
+  version: 1.0
+  related_rules:
+    - zmk_rgb_rules
+    - zmk_layer_rgb_rules
+  responsibility: "ZMK behavior bindings validation"
+  standard_patterns:
+    binding_definition:
+      format: "compatible = \"zmk,behavior-*\""
+    property_definition:
+      format: "property_name = <value>"
+    yaml_binding:
+      required: ["properties", "compatible"]
+      property_types: ["int", "string", "array", "boolean"]
+</rewritten_file> 

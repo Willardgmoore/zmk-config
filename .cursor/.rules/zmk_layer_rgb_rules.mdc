@@ -49,7 +49,7 @@ actions:
                  rgb_layer_default: rgb_layer_default {
                      compatible = "zmk,behavior-rgb-underglow";
                      #binding-cells = <2>;
-                     led-index = <17>;  // R2C6 - Layer 0 indicator
+                     index = <17>;  // R2C6 - Layer 0 indicator
                      default-color = <INDICATOR_COLOR>;
                      off-color = <LED_OFF>;
                  };
@@ -58,7 +58,7 @@ actions:
                  rgb_layer_lower: rgb_layer_lower {
                      compatible = "zmk,behavior-rgb-underglow";
                      #binding-cells = <2>;
-                     led-index = <16>;  // R2C5 - Layer 1 indicator
+                     index = <16>;  // R2C5 - Layer 1 indicator
                      default-color = <INDICATOR_COLOR>;
                      off-color = <LED_OFF>;
                  };
@@ -76,6 +76,8 @@ actions:
          - Use descriptive behavior names
          - Keep layer numbers and RGB behaviors aligned
          - Avoid duplicate LED indices across behaviors
+         - Use `index` instead of `led-index` for LED position
+         - Verify property names in ZMK binding files
 
       5. Magic Layer Safety:
          - Don't change magic layer bindings
@@ -83,6 +85,7 @@ actions:
          - Keep original magic layer timeout settings
          - Document any existing magic layer configurations
          - Consult firmware documentation before any magic layer changes
+         - Verify property compatibility with ZMK version
 
 examples:
   - input: |

@@ -37,7 +37,7 @@
         rgb_default: rgb_default {
             compatible = "zmk,behavior-rgb-underglow";
             #binding-cells = <2>;
-            led-index = <17>;  // R2C6 for layer 0
+            index = <17>;  // R2C6 for layer 0
             default-color = <PURPLE_COLOR>;
             off-color = <LED_OFF>;
         };
@@ -45,7 +45,7 @@
         rgb_lower: rgb_lower {
             compatible = "zmk,behavior-rgb-underglow";
             #binding-cells = <2>;
-            led-index = <16>;  // R2C5 for layer 1
+            index = <16>;  // R2C5 for layer 1
             default-color = <PURPLE_COLOR>;
             off-color = <LED_OFF>;
         };
@@ -53,7 +53,7 @@
         rgb_magic: rgb_magic {
             compatible = "zmk,behavior-rgb-underglow";
             #binding-cells = <2>;
-            led-index = <15>;  // R2C4 for layer 2
+            index = <15>;  // R2C4 for layer 2
             default-color = <PURPLE_COLOR>;
             off-color = <LED_OFF>;
         };
