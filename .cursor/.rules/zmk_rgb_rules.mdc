@@ -1,0 +1,105 @@
+---
+description: Standards for ZMK RGB LED configuration
+globs: 
+  - "config/*.keymap"
+  - "config/*.conf"
+---
+# ZMK RGB Configuration Standards
+
+<rule>
+name: zmk_rgb_configuration
+description: Ensures proper configuration of RGB LEDs in ZMK firmware for the Glove80 keyboard
+
+filters:
+  - type: file_extension
+    pattern: "\\.keymap$|\\.conf$"
+  - type: content
+    pattern: "(?s).*rgb.*|.*LED.*"
+
+actions:
+  - type: suggest
+    message: |
+      When configuring RGB LEDs in ZMK:
+
+      1. Required Header Files:
+         ```c
+         #include <dt-bindings/zmk/rgb.h>
+         #include <dt-bindings/led/led.h>
+         ```
+
+      2. LED Strip Configuration:
+         ```c
+         chosen {
+             zmk,underglow = &led_strip;
+         };
+
+         led_strip: ws2812@0 {
+             compatible = "worldsemi,ws2812-spi";
+             chain-length = <76>;  // Glove80 specific
+             color-mapping = <LED_COLOR_ID_GREEN 
+                            LED_COLOR_ID_RED 
+                            LED_COLOR_ID_BLUE>;
+         }
+         ```
+
+      3. Configuration Settings (.conf):
+         ```conf
+         CONFIG_ZMK_RGB_UNDERGLOW=y
+         CONFIG_WS2812_STRIP=y
+         CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE=y
+         CONFIG_ZMK_IDLE_TIMEOUT=<timeout_ms>
+         ```
+
+      4. RGB Behavior Definition:
+         ```c
+         rgb_key: rgb_key {
+             compatible = "zmk,behavior-rgb-underglow";
+             #binding-cells = <2>;
+             led-index = <index>;
+             default-color = <color_hex>;
+             off-color = <0x000000>;
+         }
+         ```
+
+      5. Common Pitfalls:
+         - Always specify chain-length for your specific keyboard
+         - Use correct color-mapping order
+         - Set appropriate idle timeout values
+         - Define colors in proper hex format
+
+examples:
+  - input: |
+      // Bad - Incorrect color mapping
+      color-mapping = <LED_COLOR_ID_RED 
+                      LED_COLOR_ID_GREEN 
+                      LED_COLOR_ID_BLUE>;
+      
+      // Good - Correct for WS2812
+      color-mapping = <LED_COLOR_ID_GREEN 
+                      LED_COLOR_ID_RED 
+                      LED_COLOR_ID_BLUE>;
+    output: "WS2812 LEDs expect GRB color mapping"
+
+metadata:
+  priority: high
+  version: 1.0
+  related_rules:
+    - zmk_keymap_standards
+    - zmk_behavior_standards
+  responsibility: "RGB LED configuration in ZMK"
+  standard_patterns:
+    rgb_behavior:
+      compatible: "zmk,behavior-rgb-underglow"
+      cells: 2
+      properties:
+        - led-index
+        - default-color
+        - off-color
+    conf_settings:
+      required:
+        - CONFIG_ZMK_RGB_UNDERGLOW
+        - CONFIG_WS2812_STRIP
+      optional:
+        - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_IDLE
+        - CONFIG_ZMK_RGB_UNDERGLOW_AUTO_OFF_USB
+</rule> 
